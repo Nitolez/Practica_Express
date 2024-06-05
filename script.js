@@ -52,14 +52,14 @@ const getTerremotosID = async () => {
 
 const getTerremotosData = async (id) => {
     try {
-        if(id === 'ci40614479'){
+        if (id === 'ci40614479') {
             id = 0;
         } else {
-        const resp = await fetch(`https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/${id}.geojson`);
-        const data = await resp.json();
-        const propiedadesTerremoto = data.properties.products.origin[0].properties;
-        //allProperties.push(propiedadesTerremoto);
-        return propiedadesTerremoto; // Retorna solo la propiedad que quieres agregar a allProperties
+            const resp = await fetch(`https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/${id}.geojson`);
+            const data = await resp.json();
+            const propiedadesTerremoto = data.properties.products.origin[0].properties;
+            //allProperties.push(propiedadesTerremoto);
+            return propiedadesTerremoto; // Retorna solo la propiedad que quieres agregar a allProperties
         }
     } catch (error) {
         console.log('Error');
@@ -85,29 +85,62 @@ getTerremotosID()
         console.log("error");
     });
 
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // Retorna solo la parte de la fecha
+};
 
 const pintarMapa = (lat, long, depth, titulo, fecha, ubi, codigo, magnitud) => {
     const marker = L.marker([lat, long]).addTo(map); //Marcadores
+    const circleColor = getColorByMagnitude(magnitud);
+    const formattedDate = formatDate(fecha);
 
     const circle = L.circle([lat, long], {
-        color: 'red',
-        fillColor: '#f03',
+        color: circleColor,
+        fillColor: circleColor,
         fillOpacity: 0.5,
         radius: depth * 1000
     }).addTo(map); //para hacer circulos de seleccion en el mapa
 
     const popup = L.popup()
 
+    const filtroFecha = document.querySelector("#filtroFecha")
+    const fechaEnFiltro = document.createElement("option")
+    fechaEnFiltro.value = formattedDate
+    fechaEnFiltro.innerText = formattedDate
+    filtroFecha.append(fechaEnFiltro)
+    
+
     circle.on('click', () => {
         popup
             .setLatLng([lat, long])
-            .setContent(`TITULO: ${titulo}. FECHA: ${fecha}. UBICACION: ${ubi}. CODIGO: ${codigo}. MAGNITUD: ${magnitud}`)
+            .setContent(`TITULO: ${titulo}. FECHA: ${formattedDate}. UBICACION: ${ubi}. CODIGO: ${codigo}. MAGNITUD: ${magnitud}`)
             .openOn(map)//Para hacer POP UPS
     })
     marker.on('click', () => {
         popup
             .setLatLng([lat, long])
-            .setContent(`TITULO: ${titulo}. FECHA: ${fecha}. UBICACION: ${ubi}. CODIGO: ${codigo}. MAGNITUD: ${magnitud}`)
+            .setContent(`TITULO: ${titulo}. FECHA: ${formattedDate}. UBICACION: ${ubi}. CODIGO: ${codigo}. MAGNITUD: ${magnitud}`)
             .openOn(map)//Para hacer POP UPS
     })
 }
+
+const getColorByMagnitude = (magnitude) => {
+    if (magnitude < 1) {
+        return 'grey';
+    } else if (magnitude < 2) {
+        return 'rgb(81, 128, 0)';
+    } else if (magnitude < 3) {
+        return 'yellow';
+    } else if (magnitude < 4) {
+        return 'rgb(255, 217, 0)';
+    } else if (magnitude < 5) {
+        return 'orange';
+    } else if (magnitude < 6) {
+        return 'red';
+    } else {
+        return 'pink';
+    }
+};
+
+
